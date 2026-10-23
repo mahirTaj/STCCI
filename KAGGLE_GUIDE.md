@@ -110,7 +110,12 @@ runs a tiny fp16 tensor operation on each GPU, without loading GPT-2 or any data
 Stop on any error before running smoke.
 
 The setup helper creates a virtual environment **without system site packages**
-at /kaggle/working/stcci-venv. It installs the unchanged torch 2.14.1 version
+at /kaggle/working/stcci-venv, with `with_pip=False` to bypass the reported
+ensurepip bootstrap failure. It uses the existing interpreter's pip with its
+documented `--python` option to install into that isolated environment; it does
+not install into the existing interpreter. This also works for a venv with no
+pip of its own. Documentation: https://pip.pypa.io/en/stable/topics/python-option/
+It installs the unchanged torch 2.14.1 version
 using the explicit `+cu126` build from PyTorch's official CUDA 12.6 index, then
 the unchanged requirements.txt. It never installs into the notebook kernel.
 Official Python 3.13 Linux wheel availability was verified on 2026-10-23 at
@@ -280,11 +285,18 @@ statistics are computed in this stage. The same file also contains
   or change the research config to bypass it.
 * **Pandas/bottleneck warning or pip conflicts with Colab/RAPIDS/gradio/etc.:**
   these appeared in the supplied shared-environment log. The isolated environment
-  excludes those unrelated preinstalled packages. Run pip check through
-  STCCI_PYTHON; a shared-kernel pip check is not a check of the research venv.
-* **`ensurepip`/venv creation unavailable, or isolated install fails:** retain the
-  full error and report it. The helper intentionally stops; it does not fall
-  back to installing into the shared environment. Do not alter pinned versions.
+  excludes those unrelated preinstalled packages. To check it, run
+  `subprocess.run([sys.executable, '-m', 'pip', '--python', STCCI_PYTHON, 'check'], check=True)`
+  in a Kaggle Code cell after the setup cell. A shared-kernel pip check without
+  `--python` does not check the research venv.
+* **`ensurepip` exits with status 1:** update the repo and rerun the same setup
+  cell. The revised helper creates the venv without ensurepip and routes existing
+  pip into it using `--python`. It can reuse the partially created isolated venv;
+  do not delete outputs or change requirements. The supplied traceback omitted
+  ensurepip's underlying output, so its exact cause is undetermined.
+* **Existing pip missing or `--python` unsupported / venv creation fails:** keep
+  the full printed error and report it. The helper stops before installing
+  research packages; it does not fall back to the shared environment.
 * **CUDA check fails after imports succeed:** keep the printed build versions,
   traceback and `nvidia-smi` output. Wheel availability is not proof of driver
   or GPU compatibility; do not proceed to full caching.

@@ -60,3 +60,19 @@ Existing official-data downloads can be retained. Code fingerprints change
 with this fix, so prior successful effect checkpoints, if any, must remain
 associated with their original code; never edit their metadata to reuse them
 under a changed fingerprint. The supplied traceback failed before model loading.
+
+## Subsequent ensurepip failure and correction
+
+The next supplied traceback showed ensurepip returning status 1 during venv
+creation, but did not include its underlying output. Its exact cause is unknown.
+The helper now creates the same isolated venv with `with_pip=False` and uses
+the existing interpreter's pip with `--python` to install/check packages inside
+that target. This follows pip's documented support for venvs without pip:
+https://pip.pypa.io/en/stable/topics/python-option/
+
+Tested on Windows CPU: **42 tests passed**, including a real offline subprocess
+test creating a venv without pip, confirming pip is absent there, and successfully
+using the controller pip to list the target's empty package set. Compilation and
+git diff checks passed. Requirements, scientific config and population manifest
+are unchanged. Kaggle bootstrap, Linux installation and all GPU execution remain
+untested locally. Reuse the existing partial venv; do not delete effect outputs.

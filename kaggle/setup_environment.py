@@ -29,12 +29,16 @@ def setup(directory):
     if directory.exists() and not (directory / "pyvenv.cfg").exists():
         raise ValueError("Existing target is not a virtual environment; choose a new --venv-dir")
     check_venv_config(directory)
-    venv.EnvBuilder(with_pip=True, system_site_packages=False).create(directory)
+    # Avoid ensurepip: the supplied notebook traceback shows that bootstrap fails.
+    # pip --python explicitly supports managing a venv with no pip installed.
+    venv.EnvBuilder(with_pip=False, system_site_packages=False).create(directory)
     python = str(isolated_python(directory))
+    pip = [sys.executable, "-m", "pip", "--python", python]
     commands = [
-        [python, "-m", "pip", "install", TORCH_WHEEL, "--index-url", TORCH_INDEX],
-        [python, "-m", "pip", "install", "-r", str(ROOT / "requirements.txt")],
-        [python, "-m", "pip", "check"],
+        [*pip, "--version"],
+        [*pip, "install", TORCH_WHEEL, "--index-url", TORCH_INDEX],
+        [*pip, "install", "-r", str(ROOT / "requirements.txt")],
+        [*pip, "check"],
         [python, str(ROOT / "kaggle/check_environment.py"), "--require-isolated"],
     ]
     for command in commands:

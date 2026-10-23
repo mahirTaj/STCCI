@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-23 — ensurepip bootstrap fix
+
+* Supplied traceback showed ensurepip exiting with status 1 during venv creation;
+  its underlying output was not included, so no root cause is asserted.
+* Create the same isolated venv without pip, then use the existing pip's
+  documented --python option to install/check packages in that target venv.
+  The partially created isolated environment is reusable; no deletion is needed.
+* Added a real offline CPU test of pip managing an empty venv with no pip,
+  and updated setup-command regression tests and the guide.
+* Tested: 42 CPU tests passed, including that real pip/venv subprocess test;
+  Python compilation and git diff whitespace checks passed.
+* Scientific config and requirement versions are unchanged. GPU execution,
+  Kaggle bootstrap and Linux CUDA installation remain untested here.
+
 ## 2026-10-23 — notebook dependency-conflict fix
 
 * Diagnosed supplied user logs: torchvision required torch 2.11.0 while the

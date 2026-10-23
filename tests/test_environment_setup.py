@@ -1,6 +1,8 @@
 """CPU-only tests of environment isolation, fail-fast checks and setup commands."""
 from pathlib import Path
 import subprocess
+import sys
+import venv
 
 from packaging.specifiers import SpecifierSet
 import pytest
@@ -26,14 +28,16 @@ def test_setup_installs_into_venv_and_stops_on_errors(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_environment.venv, "EnvBuilder", Builder)
     monkeypatch.setattr(setup_environment.subprocess, "run", run)
     setup_environment.setup(target)
-    assert builds == [{"with_pip": True, "system_site_packages": False}]
-    assert len(commands) == 4
+    assert builds == [{"with_pip": False, "system_site_packages": False}]
+    assert len(commands) == 5
     python = str(setup_environment.isolated_python(target))
-    assert all(command[0] == python for command in commands)
-    assert commands[0][4:] == ["torch==2.14.1+cu126", "--index-url", "https://download.pytorch.org/whl/cu126"]
-    assert commands[1][-1] == str(setup_environment.ROOT / "requirements.txt")
-    assert commands[2][1:] == ["-m", "pip", "check"]
-    assert commands[3][-1] == "--require-isolated"
+    prefix = [sys.executable, "-m", "pip", "--python", python]
+    assert all(command[:5] == prefix for command in commands[:4])
+    assert commands[0][-1] == "--version"
+    assert commands[1][5:] == ["install", "torch==2.14.1+cu126", "--index-url", "https://download.pytorch.org/whl/cu126"]
+    assert commands[2][-1] == str(setup_environment.ROOT / "requirements.txt")
+    assert commands[3][5:] == ["check"]
+    assert commands[4] == [python, str(setup_environment.ROOT / "kaggle/check_environment.py"), "--require-isolated"]
 
     commands.clear()
 
@@ -45,6 +49,22 @@ def test_setup_installs_into_venv_and_stops_on_errors(tmp_path, monkeypatch):
     with pytest.raises(subprocess.CalledProcessError):
         setup_environment.setup(target)
     assert len(commands) == 1
+
+
+def test_real_pip_can_manage_venv_without_ensurepip(tmp_path):
+    import json
+    target = tmp_path / "without-pip"
+    venv.EnvBuilder(with_pip=False, system_site_packages=False).create(target)
+    python = str(setup_environment.isolated_python(target))
+    # Real CPU subprocesses, offline: no dependency installation or research data.
+    result = subprocess.run([sys.executable, "-m", "pip", "--python", python,
+                             "list", "--format=json", "--disable-pip-version-check"],
+                            check=True, capture_output=True, text=True)
+    assert json.loads(result.stdout) == []
+    result = subprocess.run([python, "-c", "import importlib.util; print(importlib.util.find_spec('pip'))"],
+                            check=True, capture_output=True, text=True)
+    assert result.stdout.strip() == "None"
+    setup_environment.check_venv_config(target)
 
 
 def test_setup_refuses_system_site_packages(tmp_path):
