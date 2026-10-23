@@ -1,0 +1,251 @@
+[
+  {
+    "template": "As {name_A} and {name_B} left the {place}, {name_C} gave a {object} to",
+    "metadata": {
+      "indirect_object": "Maria",
+      "subject": "Carl",
+      "object": "fridge",
+      "place": "consulate",
+      "random_a": "Bob",
+      "random_b": "Max",
+      "random_c": "Gene"
+    },
+    "prompt": "As Carl and Maria left the consulate, Carl gave a fridge to",
+    "choices": [
+      "Maria",
+      "Carl"
+    ],
+    "answerKey": 0,
+    "abc_counterfactual": {
+      "prompt": "As Carl and Maria left the consulate, Gene gave a fridge to",
+      "choices": [
+        "Maria",
+        "Carl",
+        "Gene"
+      ],
+      "answerKey": -1
+    },
+    "random_names_counterfactual": {
+      "prompt": "As Bob and Max left the consulate, Bob gave a fridge to",
+      "choices": [
+        "Bob",
+        "Max"
+      ],
+      "answerKey": 1
+    },
+    "s1_io_flip_counterfactual": {
+      "prompt": "As Maria and Carl left the consulate, Carl gave a fridge to",
+      "choices": [
+        "Maria",
+        "Carl"
+      ],
+      "answerKey": 0
+    },
+    "s2_io_flip_counterfactual": {
+      "prompt": "As Carl and Maria left the consulate, Maria gave a fridge to",
+      "choices": [
+        "Maria",
+        "Carl"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_counterfactual": {
+      "prompt": "As Max and Bob left the consulate, Bob gave a fridge to",
+      "choices": [
+        "Bob",
+        "Max"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s2_ioi_flip_counterfactual": {
+      "prompt": "As Bob and Max left the consulate, Max gave a fridge to",
+      "choices": [
+        "Bob",
+        "Max"
+      ],
+      "answerKey": 0
+    },
+    "s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "As Maria and Carl left the consulate, Maria gave a fridge to",
+      "choices": [
+        "Maria",
+        "Carl"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "As Max and Bob left the consulate, Max gave a fridge to",
+      "choices": [
+        "Bob",
+        "Max"
+      ],
+      "answerKey": 0
+    }
+  },
+  {
+    "template": "After {name_A} and {name_B} spent some time at the {place}, {name_C} offered a {object} to",
+    "metadata": {
+      "indirect_object": "Bob",
+      "subject": "Kevin",
+      "object": "duster",
+      "place": "racecourse",
+      "random_a": "Carl",
+      "random_b": "Max",
+      "random_c": "Brian"
+    },
+    "prompt": "After Kevin and Bob spent some time at the racecourse, Kevin offered a duster to",
+    "choices": [
+      "Bob",
+      "Kevin"
+    ],
+    "answerKey": 0,
+    "abc_counterfactual": {
+      "prompt": "After Kevin and Bob spent some time at the racecourse, Brian offered a duster to",
+      "choices": [
+        "Bob",
+        "Kevin",
+        "Brian"
+      ],
+      "answerKey": -1
+    },
+    "random_names_counterfactual": {
+      "prompt": "After Carl and Max spent some time at the racecourse, Carl offered a duster to",
+      "choices": [
+        "Carl",
+        "Max"
+      ],
+      "answerKey": 1
+    },
+    "s1_io_flip_counterfactual": {
+      "prompt": "After Bob and Kevin spent some time at the racecourse, Kevin offered a duster to",
+      "choices": [
+        "Bob",
+        "Kevin"
+      ],
+      "answerKey": 0
+    },
+    "s2_io_flip_counterfactual": {
+      "prompt": "After Kevin and Bob spent some time at the racecourse, Bob offered a duster to",
+      "choices": [
+        "Bob",
+        "Kevin"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_counterfactual": {
+      "prompt": "After Max and Carl spent some time at the racecourse, Carl offered a duster to",
+      "choices": [
+        "Carl",
+        "Max"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s2_ioi_flip_counterfactual": {
+      "prompt": "After Carl and Max spent some time at the racecourse, Max offered a duster to",
+      "choices": [
+        "Carl",
+        "Max"
+      ],
+      "answerKey": 0
+    },
+    "s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "After Bob and Kevin spent some time at the racecourse, Bob offered a duster to",
+      "choices": [
+        "Bob",
+        "Kevin"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "After Max and Carl spent some time at the racecourse, Max offered a duster to",
+      "choices": [
+        "Carl",
+        "Max"
+      ],
+      "answerKey": 0
+    }
+  },
+  {
+    "template": "After {name_A} and {name_B} spent some time at the {place}, {name_C} offered a {object} to",
+    "metadata": {
+      "indirect_object": "Matt",
+      "subject": "Brian",
+      "object": "button",
+      "place": "vet",
+      "random_a": "Nick",
+      "random_b": "Kevin",
+      "random_c": "Jean"
+    },
+    "prompt": "After Brian and Matt spent some time at the vet, Brian offered a button to",
+    "choices": [
+      "Matt",
+      "Brian"
+    ],
+    "answerKey": 0,
+    "abc_counterfactual": {
+      "prompt": "After Brian and Matt spent some time at the vet, Jean offered a button to",
+      "choices": [
+        "Matt",
+        "Brian",
+        "Jean"
+      ],
+      "answerKey": -1
+    },
+    "random_names_counterfactual": {
+      "prompt": "After Nick and Kevin spent some time at the vet, Nick offered a button to",
+      "choices": [
+        "Nick",
+        "Kevin"
+      ],
+      "answerKey": 1
+    },
+    "s1_io_flip_counterfactual": {
+      "prompt": "After Matt and Brian spent some time at the vet, Brian offered a button to",
+      "choices": [
+        "Matt",
+        "Brian"
+      ],
+      "answerKey": 0
+    },
+    "s2_io_flip_counterfactual": {
+      "prompt": "After Brian and Matt spent some time at the vet, Matt offered a button to",
+      "choices": [
+        "Matt",
+        "Brian"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_counterfactual": {
+      "prompt": "After Kevin and Nick spent some time at the vet, Nick offered a button to",
+      "choices": [
+        "Nick",
+        "Kevin"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s2_ioi_flip_counterfactual": {
+      "prompt": "After Nick and Kevin spent some time at the vet, Kevin offered a button to",
+      "choices": [
+        "Nick",
+        "Kevin"
+      ],
+      "answerKey": 0
+    },
+    "s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "After Matt and Brian spent some time at the vet, Matt offered a button to",
+      "choices": [
+        "Matt",
+        "Brian"
+      ],
+      "answerKey": 1
+    },
+    "random_names_s1_ioi_flip_s2_ioi_flip_counterfactual": {
+      "prompt": "After Kevin and Nick spent some time at the vet, Kevin offered a button to",
+      "choices": [
+        "Nick",
+        "Kevin"
+      ],
+      "answerKey": 0
+    }
+  }
+]
