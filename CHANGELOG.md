@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-23 — notebook dependency-conflict fix
+
+* Diagnosed supplied user logs: torchvision required torch 2.11.0 while the
+  shared notebook environment had installed torch 2.14.1; model imports failed
+  on torchvision::nms before GPT-2 loaded. Pip also reported unrelated shared
+  package conflicts. The earlier global install instructions were inadequate.
+* Added a standard-library setup helper that installs unchanged requirement
+  versions in an isolated venv, selecting the official torch 2.14.1+cu126 build.
+  Verified Python 3.13 Linux wheel listing on the official PyTorch index.
+* Added import/environment checks, optional two-device CUDA tensor probes,
+  and parent-process import validation before downloading data or spawning workers.
+  Updated notebook and guide to use the isolated interpreter with checked exits.
+* No hypothesis, estimand, MESOI, frozen scientific config or requirement
+  version changed. Dataset/model revisions and the population manifest remain fixed.
+* Tested/untested details for this fix: reports/environment_fix.md. GPU probes,
+  isolated Linux installation and all model forwards remain untested locally.
+
 ## 2026-10-23
 
 * Prepared the initially empty repo for the requested first implementation stage.

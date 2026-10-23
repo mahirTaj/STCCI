@@ -7,6 +7,44 @@ is assumed here. The script's own default time budget is 7.5 hours including
 startup; it reserves another 5 minutes before starting further work. Download
 time or an in-flight CUDA call cannot be guaranteed to finish by a deadline.
 
+## Recovery from the reported torchvision import failure
+
+The failed run reached preprocessing but stopped before loading GPT-2. The
+updated setup below isolates dependencies. First publish the local fix from
+PowerShell in your local repo:
+
+```powershell
+git add CHANGELOG.md KAGGLE_GUIDE.md kaggle models/environment.py reports/environment_fix.md tests/test_environment_setup.py
+git commit -m "Isolate Kaggle dependencies and check model imports early"
+git push
+```
+
+Then in the existing notebook, replace the old install/run cells with:
+
+```python
+%cd /kaggle/working/STCCI
+!git pull --ff-only
+```
+
+Confirm the pull succeeds, then run:
+
+```python
+import subprocess
+import sys
+subprocess.run([sys.executable, 'kaggle/setup_environment.py'], check=True)
+STCCI_PYTHON = '/kaggle/working/stcci-venv/bin/python'
+subprocess.run([STCCI_PYTHON, 'kaggle/check_environment.py',
+                '--require-isolated', '--require-cuda'], check=True)
+subprocess.run([STCCI_PYTHON, 'kaggle/run_effect_cache.py', '--smoke'], check=True)
+```
+
+Expected gates: ENVIRONMENT_READY, ENVIRONMENT_CHECK_PASS, then smoke COMPLETE.
+Do not run the full cache until these pass. Keep the existing stcci data/download
+directory; do not remove it to repair imports. If you have successful effect
+checkpoints from an earlier code version, retain that code for resumption or
+use a separate output directory for this fix; code identity checks intentionally
+reject mixing them. The supplied failing run did not reach model loading.
+
 ## 1. Push this folder to GitHub
 
 Create an empty GitHub repository in your browser. From PowerShell in this folder:
@@ -57,21 +95,38 @@ new code into a partially completed cache run. For exact replay, check out the
 original commit in a fresh clone.
 
 ```python
-!python -m pip install -r requirements.txt
-!python -m pip check
+import subprocess
+import sys
+subprocess.run([sys.executable, 'kaggle/setup_environment.py'], check=True)
+STCCI_PYTHON = '/kaggle/working/stcci-venv/bin/python'
+subprocess.run([STCCI_PYTHON, 'kaggle/check_environment.py',
+                '--require-isolated', '--require-cuda'], check=True)
 ```
 
-Expected: successful install and `No broken requirements found.` The local
-dependency/API audit was on Windows CPU. Linux/CUDA installation remains
-untested. If the notebook already imported torch/transformers, restart its
-Python session after installing; files under /kaggle/working must be preserved
-according to the current platform behavior you verify. Do not replace pins
-silently when resolving an install error.
+Expected: `No broken requirements found.`, `ENVIRONMENT_READY`, then
+`ENVIRONMENT_CHECK_PASS (no model forwards)`. The final check prints the exact
+interpreter, package versions, CUDA runtime, and both assigned device names. It
+runs a tiny fp16 tensor operation on each GPU, without loading GPT-2 or any data.
+Stop on any error before running smoke.
+
+The setup helper creates a virtual environment **without system site packages**
+at /kaggle/working/stcci-venv. It installs the unchanged torch 2.14.1 version
+using the explicit `+cu126` build from PyTorch's official CUDA 12.6 index, then
+the unchanged requirements.txt. It never installs into the notebook kernel.
+Official Python 3.13 Linux wheel availability was verified on 2026-10-23 at
+https://download.pytorch.org/whl/cu126/torch/; execution on your GPUs remains
+unverified until this check passes. The earlier generic install pulled CUDA 13
+packages in the supplied user log; this setup explicitly selects CUDA 12.6.
+
+Always use STCCI_PYTHON below. Using bare `python` again selects the shared
+environment and can reproduce the original conflict. No kernel restart is
+needed for the external interpreter to use its newly installed packages. The
+notebook's own shared environment is not repaired by this helper.
 
 ## 4. Run smoke first
 
 ```python
-!python kaggle/run_effect_cache.py --smoke
+subprocess.run([STCCI_PYTHON, 'kaggle/run_effect_cache.py', '--smoke'], check=True)
 ```
 
 Expected (illustrative messages, not observed GPU output): preprocessing counts
@@ -82,13 +137,13 @@ prints `COMPLETE` and `/kaggle/working/stcci/smoke/effects.npz` (8 records,
 checks HF/bridge logits, hook dimensions, no-op replacement, and finite bounded
 effects before writing results. Read any traceback; do not proceed on failure.
 
-Notebook `!` commands may not raise a Python exception on nonzero exit. Look
-for COMPLETE and the final file, rather than assuming the cell succeeded.
+`check=True` raises if the CLI exits with an error. Also look for COMPLETE and
+the final file; a clean time-budget pause returns successfully with PAUSED.
 
 ## 5. Check fp16/fp32 agreement
 
 ```python
-!python kaggle/run_effect_cache.py --fp32-check
+subprocess.run([STCCI_PYTHON, 'kaggle/run_effect_cache.py', '--fp32-check'], check=True)
 ```
 
 Expected: separate resumable fp16/fp32 caches on the fixed first 8 population
@@ -101,7 +156,7 @@ not evidence of statistical coverage or general fp16 accuracy.
 ## 6. Run the full cache
 
 ```python
-!python kaggle/run_effect_cache.py
+subprocess.run([STCCI_PYTHON, 'kaggle/run_effect_cache.py'], check=True)
 ```
 
 Expected: same checks, 1,024 records and 24 heads; two independent processes each
@@ -113,7 +168,9 @@ run the same command again with the same config and output directory.
 Paths and operational settings:
 
 ```python
-!python kaggle/run_effect_cache.py --output-dir /kaggle/working/stcci --input-dir /kaggle/input --checkpoint-batches 1 --max-hours 7
+subprocess.run([STCCI_PYTHON, 'kaggle/run_effect_cache.py',
+    '--output-dir', '/kaggle/working/stcci', '--input-dir', '/kaggle/input',
+    '--checkpoint-batches', '1', '--max-hours', '7'], check=True)
 ```
 
 Outputs default to /kaggle/working/stcci; attached resume data defaults to
@@ -215,6 +272,19 @@ statistics are computed in this stage. The same file also contains
   fresh directory; never merge different configs or population manifests.
 * **PAUSED:** preserve files and rerun the same command. **Worker failed:** inspect
   logs/tracebacks and rerun only after diagnosing; no complete matrix is emitted.
-* **Dependency conflict:** use a fresh notebook session and retain the pip error.
-  Linux/CUDA compatibility has not been measured by Codex. Report errors before
-  altering pinned dependencies or interpreting any results.
+* **`torchvision::nms does not exist` / `Could not import PreTrainedModel`:**
+  the supplied failure log shows torchvision 0.26.0+cu128 requiring torch 2.11.0
+  alongside installed torch 2.14.1. Transformers' import reached torchvision
+  and failed before GPT-2 loaded. Run the isolated setup above and use its
+  interpreter for the check and smoke. Do not uninstall random notebook packages
+  or change the research config to bypass it.
+* **Pandas/bottleneck warning or pip conflicts with Colab/RAPIDS/gradio/etc.:**
+  these appeared in the supplied shared-environment log. The isolated environment
+  excludes those unrelated preinstalled packages. Run pip check through
+  STCCI_PYTHON; a shared-kernel pip check is not a check of the research venv.
+* **`ensurepip`/venv creation unavailable, or isolated install fails:** retain the
+  full error and report it. The helper intentionally stops; it does not fall
+  back to installing into the shared environment. Do not alter pinned versions.
+* **CUDA check fails after imports succeed:** keep the printed build versions,
+  traceback and `nvidia-smi` output. Wheel availability is not proof of driver
+  or GPU compatibility; do not proceed to full caching.

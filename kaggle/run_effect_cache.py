@@ -154,6 +154,8 @@ def main(argv=None):
     if not args.prepare_only:
         if not torch.cuda.is_available() or max(args.devices) >= torch.cuda.device_count():
             raise RuntimeError("Requested CUDA devices are unavailable; GPU cache must be run on Kaggle")
+        from models.environment import verify_model_imports
+        verify_model_imports()
     dataset_path = args.dataset_path
     if dataset_path and not dataset_path.is_absolute():
         dataset_path = args.input_dir / dataset_path
